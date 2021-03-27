@@ -28,27 +28,26 @@ WORKDIR     /root
 USER        root
 EXPOSE      5432
 VOLUME      ["/home/data"]
-ENV         LD_PRELOAD=/usr/local/lib/libporg-log.so
 ENV         POSTGRES_VERSION=13.2
 ENV         POSTGRES_DEST=postgresql-${POSTGRES_VERSION}
 #PostgreSQL用環境変数
 ENV         PGHOME=/usr/local/${POSTGRES_DEST}
 ENV         PGDATA=/home/data/pgdata
-ENV         PATH=${PGHOME}/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+ENV         PATH=${PGHOME}/bin:/usr/local/python/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 #postgresユーザー・グループ
 ENV         PG_GROUP=postgres
 ENV         PG_USER=postgres
 ENV         PG_GID=990
 ENV         PG_UID=1008
-RUN         mkdir -p "${POSTGRES_DEST}"
-COPY        --from=builder /usr/local/${POSTGRES_DEST}/ /root/${POSTGRES_DEST}
+RUN         mkdir /usr/local/${POSTGRES_DEST}
+COPY        --from=builder /usr/local/${POSTGRES_DEST}/ /usr/local/${POSTGRES_DEST}
 COPY        rcprofile /etc/rc.d
 RUN         apt update && \
 #   porgでPythonをパッケージ管理
 #             chown -R root.root /usr/local && \
 #             find ${PYTHON_HOME} -type f -print | xargs porg -l -p ${PYTHON_DEST} && \
             mkdir /home/data && chown root.root /home/data && chmod 755 /home/data && \
-            cd ${POSTGRES_DEST} && porg -lD "cp -r /root/${POSTGRES_DEST} /usr/local/${POSTGRES_DEST}" && \
+            ln -s ${PGHOME} /usr/local/postgres && \
             echo "${PGHOME}/lib" >>/etc/ld.so.conf && ldconfig && \
             groupadd -g ${PG_GID} ${PG_GROUP} && \
                 useradd -u ${PG_UID} -m -d /home/${PG_USER} -s /bin/bash -g ${PG_GROUP} \ 
@@ -56,5 +55,5 @@ RUN         apt update && \
             chown -R ${PG_USER}.${PG_GROUP} /usr/local/${PGDEST} && \
                 mkdir /var/log/postgres && chown -R ${PG_USER}.${PG_GROUP} /var/log/postgres && \ 
                 chmod 750 /var/log/postgres && \
-            cd ~/ && apt clean && rm -rf /var/lib/apt/lists/* && rm -rf ${POSTGRES_DEST}
+            cd ~/ && apt clean && rm -rf /var/lib/apt/lists/*
 
