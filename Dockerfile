@@ -56,4 +56,9 @@ RUN         apt update && \
                 mkdir /var/log/postgres && chown -R ${PG_USER}.${PG_GROUP} /var/log/postgres && \ 
                 chmod 750 /var/log/postgres && \
             cd ~/ && apt clean && rm -rf /var/lib/apt/lists/*
-
+RUN         mkdir -p /usr/local/sh/postgres
+COPY        postgres-entrypoint.sh /usr/local/sh/postgres/postgres-entrypoint.sh
+RUN         chown -R ${PG_USER}.${PG_GROUP} /usr/local/sh/postgres && \ 
+                chmod 3775 /usr/local/sh/postgres && \
+                chmod 775 /usr/local/sh/postgres/postgres-entrypoint.sh
+ENTRYPOINT  /usr/local/sh/postgres/postgres-entrypoint.sh
