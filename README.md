@@ -1,39 +1,35 @@
-# kacpp-pydev Python開発環境Dockerイメージ
+# kacpp-postgres DBのPostgreSQL環境Dockerイメージ
 
 ## 概要
-Pythonをソースからインストールして設定したDockerイメージ。
-Pythonのソースは3.9.2である。
+PostgreSQLをソースからインストールして設定したDockerイメージ。
+現在のPostgreSQLのソースは13.2である。
 debian:buster-slimイメージを基に作成されている。
 
 ## 使い方
 ```shell
-docker image pull kagalpandh/kacpp-pydev
-docker run -dit --name kacpp-ja kagalpandh/kacpp-pydev
+docker image pull kagalpandh/kacpp-postgres
+docker run -dit --name kacpp-postgres kagalpandh/kacpp-postgres
 ```
 
 ## 説明
-Pythonをソースからインストールしてある。
-<!--
-porgでインストールしてあり
-```shell
-porg -f Python-3.9.2
-```
-でファイル一覧を見ることができる。
--->
-インストール場所は/usr/local/Python-{PYTHON_VERSION}である。
-Pythonをコンパイルする際にgccなどを使用するがこのイメージにはGCC開発環境は
-インストールされていない。
-
+PostgreSQLサーバーをソースからインストールしてある。
+現在のPostgreSQLサーバーのバージョンは13.2である。
+EXPOSE(開いているポート)の5432を使用している。
+VOLUME(永続化ストレージ)に/home/dataにマウントすること。
+そしてデフォルトでは/home/data/pgdataにデーターベースクラスタがあると期待している。
+データーベースの管理者ユーザーpostgresが既に入っておりこのユーザーでDBにログインできる。
+他のユーザーは作成していない。
 
 ##構成
-Pythonのインストール場所は/usr/local/Python-${PYTHON_VERSION}である。
-これをPYTHON_HOMEという環境変数で参照できここに/usr/local/pythonでリンクが貼ってある。
-PATHもとうしてある(/usr/local/Python-{VERSION}/bin)。
+環境変数
+PGHOME  PostgreSQLが入っているディレクトリ。
+PGDATA  データーベースクラスタ領域
+管理者ユーザー postgres
 
 ##ベースイメージ
-kagalpandh/kacpp-ja
+kagalpandh/kacpp-pydev
 
 # その他
-DockerHub: [kagalpandh/kacpp-ja](https://hub.docker.com/repository/docker/kagalpandh/kacpp-gccdev)<br />
-GitHub: [karakawa88/kacpp-ja](https://github.com/karakawa88/kacpp-ja)
+DockerHub: [kagalpandh/kacpp-postgres](https://hub.docker.com/repository/docker/kagalpandh/kacpp-postgres)<br />
+GitHub: [karakawa88/kacpp-postgres](https://github.com/karakawa88/kacpp-postgres)
 
