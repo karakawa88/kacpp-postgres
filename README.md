@@ -8,7 +8,8 @@ debian:buster-slimイメージを基に作成されている。
 ## 使い方
 ```shell
 docker image pull kagalpandh/kacpp-postgres
-docker run -dit --name kacpp-postgres kagalpandh/kacpp-postgres
+docker run -dit --name kacpp-postgres -v /home/data:/home/data kagalpandh/kacpp-postgres
+docker run -dit --name kacpp-postgres -v /home/data:/home/data -e PGDATA=/home/data/pgdata kagalpandh/kacpp-postgres
 ```
 
 ## 説明
@@ -17,6 +18,7 @@ PostgreSQLサーバーをソースからインストールしてある。
 EXPOSE(開いているポート)の5432を使用している。
 VOLUME(永続化ストレージ)に/home/dataにマウントすること。
 そしてデフォルトでは/home/data/pgdataにデーターベースクラスタがあると期待している。
+データーベースクラスタの場所はPGDATA環境変数で指定できる。
 データーベースの管理者ユーザーpostgresが既に入っておりこのユーザーでDBにログインできる。
 他のユーザーは作成していない。
 

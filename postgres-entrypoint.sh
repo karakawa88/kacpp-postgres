@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PGDATA=/home/data/pgdata
+PGDATA=${PGDATA:-/home/data/pgdata}
 PG_USER=postgres
 PG_GROUP=postgres
 
