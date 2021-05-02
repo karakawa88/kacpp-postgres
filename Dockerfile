@@ -12,9 +12,11 @@ ENV         POSTGRES_DEST=${POSTGRES_SRC}
 ENV         PGHOME=/usr/local/${PYTHON_DEST}
 ENV         PATH=${PYTHON_HOME}/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
 ENV         LD_LIBRARY_PATH=${PYTHON_HOME}/lib
+COPY        sh/  /usr/local/sh
 # 開発環境インストール
 RUN         apt update \
             && /usr/local/sh/system/apt-install.sh install gccdev.txt \
+            && /usr/local/sh/system/apt-install.sh install postgres-dev.txt \
             && wget ${POSTGRES_URL} && tar -jxvf ${POSTGRES_SRC_FILE} && cd ${POSTGRES_SRC} \
                 &&  ./configure --prefix=/usr/local/${POSTGRES_DEST} --enable-shared --with-openssl \
                 && make && make install  \
@@ -46,7 +48,8 @@ RUN         apt update && \
 #   porgでPythonをパッケージ管理
 #             chown -R root.root /usr/local && \
 #             find ${PYTHON_HOME} -type f -print | xargs porg -l -p ${PYTHON_DEST} && \
-            mkdir /home/data && chown root.root /home/data && chmod 755 /home/data && \
+#             mkdir /home/data && \
+            chown root.root /home/data && chmod 755 /home/data && \
             ln -s ${PGHOME} /usr/local/postgres && \
             echo "${PGHOME}/lib" >>/etc/ld.so.conf && ldconfig && \
             groupadd -g ${PG_GID} ${PG_GROUP} && \
