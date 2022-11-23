@@ -1,0 +1,4 @@
+# PostgreSQLのビルドに必要なライブラリ
+libssl-dev
+libxml2-dev
+libperl-dev

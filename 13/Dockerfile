@@ -4,7 +4,7 @@ FROM        kagalpandh/kacpp-gccdev AS builder
 SHELL       [ "/bin/bash", "-c" ]
 WORKDIR     /root
 ENV         DEBIAN_FORONTEND=noninteractive
-ENV         POSTGRES_VERSION=15.1
+ENV         POSTGRES_VERSION=13.9
 ENV         POSTGRES_SRC=postgresql-${POSTGRES_VERSION}
 ENV         POSTGRES_SRC_FILE=${POSTGRES_SRC}.tar.bz2
 ENV         POSTGRES_URL="https://ftp.postgresql.org/pub/source/v${POSTGRES_VERSION}/${POSTGRES_SRC_FILE}"
@@ -14,16 +14,14 @@ ENV         PATH=${PYTHON_HOME}/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr
 ENV         LD_LIBRARY_PATH=${PYTHON_HOME}/lib
 COPY        sh/  /usr/local/sh
 # 開発環境インストール
-RUN         apt update && \
-            /usr/local/sh/system/apt-install.sh install gccdev.txt && \
-            /usr/local/sh/system/apt-install.sh install postgres-dev.txt && \
-            source /usr/local/sh/util/sh.src && \
-            wget ${POSTGRES_URL} && wget ${POSTGRES_URL}.md5 && \
-                md5_check ${POSTGRES_SRC_FILE} && \
-            tar -jxvf ${POSTGRES_SRC_FILE} && cd ${POSTGRES_SRC} && \
-                ./configure --prefix=/usr/local/${POSTGRES_DEST} --enable-shared --with-openssl \
+RUN         apt update \
+            && /usr/local/sh/system/apt-install.sh install gccdev.txt \
+            && /usr/local/sh/system/apt-install.sh install postgres-dev.txt \
+            && wget ${POSTGRES_URL} && tar -jxvf ${POSTGRES_SRC_FILE} && cd ${POSTGRES_SRC} \
+                &&  ./configure --prefix=/usr/local/${POSTGRES_DEST} --enable-shared --with-openssl \
                 && make && make install  \
                 && cd contrib/pgcrypto && make && make install \
+            && /usr/local/sh/system/apt-install.sh uninstall gccdev.txt \
                 && apt autoremove -y && apt clean && rm -rf /var/lib/apt/lists/* \
                 && cd ../ && rm -rf ${POSTGRES_DEST}*
 FROM        kagalpandh/kacpp-pydev
@@ -32,7 +30,7 @@ WORKDIR     /root
 USER        root
 EXPOSE      5432
 VOLUME      ["/home/data"]
-ENV         POSTGRES_VERSION=15.1
+ENV         POSTGRES_VERSION=13.2
 ENV         POSTGRES_DEST=postgresql-${POSTGRES_VERSION}
 #PostgreSQL用環境変数
 ENV         PGHOME=/usr/local/${POSTGRES_DEST}
@@ -41,18 +39,19 @@ ENV         PATH=${PGHOME}/bin:/usr/local/python/bin:/usr/local/bin:/usr/local/s
 #postgresユーザー・グループ
 ENV         PG_GROUP=postgres
 ENV         PG_USER=postgres
-ENV         PG_GID=987
-ENV         PG_UID=1004
+ENV         PG_GID=990
+ENV         PG_UID=1008
 RUN         mkdir /usr/local/${POSTGRES_DEST}
 COPY        --from=builder /usr/local/${POSTGRES_DEST}/ /usr/local/${POSTGRES_DEST}
 COPY        rcprofile /etc/rc.d
-COPY        sh/         /usr/local/sh
 RUN         apt update && \
-            source /usr/local/sh/util/sh.src && \
+#   porgでPythonをパッケージ管理
+#             chown -R root.root /usr/local && \
+#             find ${PYTHON_HOME} -type f -print | xargs porg -l -p ${PYTHON_DEST} && \
+#             mkdir /home/data && \
             chown root.root /home/data && chmod 755 /home/data && \
             ln -s ${PGHOME} /usr/local/postgres && \
             echo "${PGHOME}/lib" >>/etc/ld.so.conf && ldconfig && \
-            userdel_func "postgres" && groupdel_func "postgres" && \
             groupadd -g ${PG_GID} ${PG_GROUP} && \
                 useradd -u ${PG_UID} -m -d /home/${PG_USER} -s /bin/bash -g ${PG_GROUP} \ 
                 -G ${PG_GROUP} ${PG_USER} && \

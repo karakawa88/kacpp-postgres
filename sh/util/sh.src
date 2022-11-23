@@ -1,0 +1,84 @@
+#!/bin/bash
+
+###
+# 概要: シェルスクリプトユーティリティファイル
+# ファイル: sh.src
+#
+
+##
+# 概要: md5チェックサムを行う関数。
+# 説明: ファイルのチェックサムが正しいかチェックする関数。
+#       ファイルに対してmd5のファイルがあるものとする。
+#       例えばsrc.tar.xzにsrc.tar.xz.md5のようなファイルである。
+#       第二引数は省略できその場合はファイルにmd5の拡張子のファイルがあるものとする。
+# 書式: md5_check ファイル名 [md5ファイル]
+# 引数: $1  ファイル
+#       $2  md5ファイル 省略可能
+# ステータス:   0 正常
+#               1 引数エラー
+#               2 ファイルかmd5ファイルが存在しない
+#               3 md5のチェックサムが正しくない
+function md5_check() {
+    local src=$1
+    local dest=""
+    local src_md5
+    local dest_md5
+
+    #引数チェック
+    if (($# <= 0))
+    then
+        echo "$0 引数エラー 引数にはmd5の対象になるファイル名が必要です。" 1>&2
+        return 1
+    fi
+    if (($# >= 2))
+    then
+        dest="$2"
+    else
+        dest="${src}.md5"
+    fi
+    if [[ ! -r "$src" || ! -r "$dest" ]]
+    then
+        echo "Error ファイルが存在しません。src=$src md5=$dest" 1>&2
+        return 2
+    fi
+
+    # チェックサム
+    src_md5=$(md5sum "$src" | sed -r 's/^([a-zA-Z0-9]+)[ \t]+.*$/\1/')
+    dest_md5=$(cat "$dest" | sed -r 's/^([a-zA-Z0-9]+)[ \t]+.*$/\1/')
+    if [[ "$src_md5" == "$dest_md5" ]]
+    then
+        return 0        # 正常
+    else
+        return 3        # 一致しない
+    fi
+}
+
+##
+# 概要: ユーザーが存在するか確認して削除する。
+# 書式: userdel_func user...
+# 引数: 複数ユーザー
+function userdel_func() {
+    for user in "$@"
+    do
+        cat /etc/passwd | grep -E -q "^${user}" >/dev/null 2>&1
+        if (($? == 0))
+        then
+            userdel -r "$user"
+        fi
+    done
+    return 0
+}
+# 概要: グループが存在するか確認して削除する。
+# 書式: groupdel_func group...
+# 引数: 複数グループ
+function groupdel_func() {
+    for group in "$@"
+    do
+        cat /etc/group | grep -E -q "^${group}" >/dev/null 2>&1
+        if (($? == 0))
+        then
+            groupdel -r "$group"
+        fi
+    done
+    return 0
+}
